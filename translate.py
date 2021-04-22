@@ -1,11 +1,14 @@
-import google_trans_new
+from google.cloud import translate_v2
+from google.oauth2 import service_account
+from google.api_core.exceptions import BadRequest as BadRequest
 
 
-LANGKEYS = dict((v, k) for k, v in google_trans_new.LANGUAGES.items())
+def translate_google_cloud_api(src, dst, text):
+    credentials = service_account.Credentials.from_service_account_file(
+        'C:\\Users\\mateu\\PycharmProjects\\Translator\\translator_key.json')
+    translation = translate_v2.Client(credentials=credentials)
+    try:
+        print(translation.translate(text, source_language=src, target_language=dst))
+    except BadRequest as e:
+        print(e)
 
-
-def translate(text, source, destination):
-    global LANGKEYS
-    translator = google_trans_new.google_translator()
-    translation = translator.translate(text, lang_src=LANGKEYS[source], lang_tgt=LANGKEYS[destination])
-    return translation
