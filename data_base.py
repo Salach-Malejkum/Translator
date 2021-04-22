@@ -1,4 +1,6 @@
 import sqlalchemy as db
+from translate import supported_languages
+from sqlalchemy_utils import database_exists
 
 
 class DataBase:
@@ -6,17 +8,18 @@ class DataBase:
     __connection = __engine.connect()
     __metadata = db.MetaData()
     __languages = db.Table('languages', __metadata,
-                           db.Column('Id', db.Integer(), primary_key=True),
-                           db.Column('Name', db.String(50), nullable=False, unique=True)
+                           db.Column('Name', db.String(50), nullable=False, unique=True),
+                           db.Column('Abbreviation', db.String(5), nullable=False, unique=True)
                            )
 
     def __init__(self):
-        DataBase.__metadata.create_all(DataBase.__engine, checkfirst=True)
+        if not database_exists(self.__engine.url):
+            DataBase.__metadata.create_all(DataBase.__engine)
+            languages = supported_languages()
+            for k, v in languages.items():
+                query = db.insert(self.__languages).values(Name=k, Abbreviation=v)
+                self.__connection.execute(query)
 
     def get_languages(self):
-        return self.__connection.execute(db.select([self.__languages])).fetchall()
-
-    def add_language(self, language):
-        if all([False if language == row[1] else True for row in self.get_languages()]):
-            query = db.insert(self.__languages).values(Name=language)
-            self.__connection.execute(query)
+        lang_tuple_list = self.__connection.execute(db.select([self.__languages])).fetchall()
+        return {tup[0]: tup[1] for tup in lang_tuple_list}
