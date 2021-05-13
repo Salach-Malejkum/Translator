@@ -1,10 +1,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-import data_base
 
 
 class Translator(object):
-    __db = data_base.DataBase()
-    __language_dict = __db.get_languages()
 
     def setup_ui(self, main_window):
         main_window.setObjectName("MainWindow")
@@ -33,6 +30,9 @@ class Translator(object):
                                             "    font-size:11px;\n"
                                             "    text-decoration:none;\n"
                                             "    text-shadow:0px 1px 0px #2f6627;\n"
+                                            "}\n"
+                                            "QPushButton::hover{\n"
+                                            "    background-color: #00b12d;\n"
                                             "}\n"
                                             "QPushButton:pressed {\n"
                                             "    background-color:#15d648;\n"
@@ -92,7 +92,6 @@ class Translator(object):
                                         "    color: #ffffff\n"
                                         "}")
         self.languages_in.setObjectName("languages_in")
-        self.languages_in.addItems(self.__language_dict.keys())
 
         self.languages_out = QtWidgets.QComboBox(self.centralwidget)
         self.languages_out.setGeometry(QtCore.QRect(510, 100, 131, 22))
@@ -147,7 +146,6 @@ class Translator(object):
                                          "    color: #ffffff\n"
                                          "}")
         self.languages_out.setObjectName("languages_out")
-        self.languages_out.addItems(self.__language_dict.keys())
 
         self.text_in = QtWidgets.QTextEdit(self.centralwidget)
         self.text_in.setGeometry(QtCore.QRect(70, 130, 291, 131))
@@ -207,6 +205,9 @@ class Translator(object):
                                        "    text-decoration:none;\n"
                                        "    text-shadow:0px 1px 0px #2f6627;\n"
                                        "}\n"
+                                       "QPushButton::hover{\n"
+                                       "    background-color: #00b12d;\n"
+                                       "}\n"
                                        "QPushButton:pressed {\n"
                                        "    background-color:#15d648;\n"
                                        "}")
@@ -226,6 +227,9 @@ class Translator(object):
                                        "    text-decoration:none;\n"
                                        "    text-shadow:0px 1px 0px #2f6627;\n"
                                        "}\n"
+                                       "QPushButton::hover{\n"
+                                       "    background-color: #00b12d;\n"
+                                       "}\n"
                                        "QPushButton:pressed {\n"
                                        "    background-color:#15d648;\n"
                                        "}")
@@ -240,6 +244,9 @@ class Translator(object):
                                        "    border:1px solid #18ab29;\n"
                                        "    display:inline-block;\n"
                                        "    cursor:pointer;\n"
+                                       "}\n"
+                                       "QPushButton::hover{\n"
+                                       "    background-color: #00b12d;\n"
                                        "}\n"
                                        "QPushButton:pressed {\n"
                                        "    background-color:#15d648;\n"
