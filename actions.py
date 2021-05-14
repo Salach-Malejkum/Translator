@@ -2,16 +2,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import trie
 from GUI import Translator
 from translate import translate_google_cloud_api
-from google.api_core.exceptions import BadRequest
 from google.auth.exceptions import TransportError
 import data_base
 import dill
 import re
+import os
 
 
 def error_message_box(message):
     msg = QtWidgets.QMessageBox()
-    msg.setWindowTitle("Error")
+    msg.setWindowTitle("Error!")
     msg.setWindowIcon(QtGui.QIcon("./icons/error.png"))
     msg.setText(message)
     msg.show()
@@ -29,7 +29,7 @@ def info_message_box(message):
 
 def warning_message_box(message):
     msg = QtWidgets.QMessageBox()
-    msg.setWindowTitle("Warning")
+    msg.setWindowTitle("Warning!")
     msg.setWindowIcon(QtGui.QIcon("./icons/warn.png"))
     msg.setText(message)
     msg.show()
@@ -51,43 +51,54 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
         self.languages_in.addItems(self.__language_dict.keys())
         self.languages_out.addItems(self.__language_dict.keys())
         self.text_in.installEventFilter(self)
-        self.trie = dill.load(open("autocomplete/autofill.pickle", "rb"))
+        self.languages_in.currentTextChanged.connect(lambda: self.autocomplete_load_node())
+        self.actual_lang = self.languages_in.currentText().lower()
+        self.node = dill.load(open(f"autocomplete/{self.actual_lang}.pickle", "rb"))
 
-    # get data to call API
-    def get_src_dest(self, src, dest):
-        source = self.__language_dict[src]
-        destination = self.__language_dict[dest]
-        return source, destination
+    def autocomplete_load_node(self):
+        tmp = self.languages_in.currentText().lower()
+        dill.dump(self.node, open(f"autocomplete/{self.actual_lang}.pickle", "wb"))
+        self.actual_lang = tmp
+        if os.path.isfile(f"./autocomplete/{self.actual_lang}.pickle"):
+            self.node = dill.load(open(f"autocomplete/{self.actual_lang}.pickle", "rb"))
+        else:
+            node = trie.Node()
+            dill.dump(node, open(f"autocomplete/{self.actual_lang}.pickle", "wb"))
+            self.node = node
+
+    def translate_update_trie(self):
+        words_save = re.sub("[^a-z ]", "", self.text_in.toPlainText().lower()).split()
+        for word in words_save:
+            trie.insert(self.node, word)
+        file_name = self.languages_in.currentText().lower()
+        dill.dump(self.node, open(f"autocomplete/{file_name}.pickle", "wb"))
+        self.autocomplete.setText("Press Tab to complete:")
+        self.suggestion, self.sugg_message = "", ""
 
     # translate text from input and show it
-    # add updating trie after pushing button
-    def action_translate(self):
+    def action_translate(self, update_trie=True):
         src = self.languages_in.currentText()
         dest = self.languages_out.currentText()
         text = self.text_in.toPlainText()
-        for word in self.text_in.toPlainText().split():
-            trie.insert(self.trie, word)
-        dill.dump(self.trie, open("autocomplete/autofill.pickle", "wb"))
-        self.autocomplete.setText("To fill press Tab key:")
-        self.suggestion = ""
-        self.sugg_message = ""
 
         if text == "":
-            pass
+            return
         elif src == dest:
             self.text_out.setText(text)
         else:
-            src, dest = self.get_src_dest(src, dest)
+            src = self.__language_dict[src]
+            dest = self.__language_dict[dest]
             try:
                 translation = translate_google_cloud_api(src, dest, text)
                 self.text_out.setText(translation['translatedText'])
             # no internet connection
             except TransportError:
                 error_message_box("No internet connection!")
-            # except BadRequest:
-            #     print("XD")
 
-    # swap languages and set input text to the translated text then call action_translate
+        if update_trie:
+            self.translate_update_trie()
+
+    # swap languages and texts if not empty, then call translate on new input
     def action_swap(self):
         src_lang = self.languages_in.currentIndex()
         dest_lang = self.languages_out.currentIndex()
@@ -97,14 +108,14 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
         self.languages_out.setCurrentIndex(src_lang)
         if dest_text != "":
             self.text_in.setText(dest_text)
-            self.action_translate()
+            self.action_translate(update_trie=False)
 
     def action_clear(self):
         self.text_in.setText("")
         self.text_out.setText("")
 
     def action_save(self):
-        filename, filter_ = QtWidgets.QFileDialog.getSaveFileName(caption='Select output file',  directory='/Users',
+        filename, filter_ = QtWidgets.QFileDialog.getSaveFileName(caption='Select output file', directory='/Users',
                                                                   filter='*.txt')
         if filename:
             if self.text_in.toPlainText() != "":
@@ -120,16 +131,10 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
 
     # make sure to add enough restrictions to loading data
     def action_load(self):
-        msg = QtWidgets.QMessageBox()
-        msg.setWindowTitle("File content")
-        msg.setWindowIcon(QtGui.QIcon("./icons/info.png"))
-        msg.setText("Make sure that txt file contains in first lane two languages(first source, second destination) "
-                    "followed by text to transalte in next line.")
-        msg.show()
-        msg.exec_()
+        warning_message_box("Make sure that .txt file contains in first lane: two languages(first source, "
+                            "second destination) followed by text to translate in next line.")
         filename, filter_ = QtWidgets.QFileDialog.getOpenFileName(caption='Save file', directory='/Users',
                                                                   filter='*.txt')
-        print(filter_, filename)
 
         if filename:
             with open(filename, "r", encoding="utf-8") as f:
@@ -138,25 +143,43 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
                     error_message_box("Wrong file content!")
                 else:
                     src, dest = content[0].strip().split()
-                    src_ind = list(self.__language_dict.keys()).index(src)
-                    dest_ind = list(self.__language_dict.keys()).index(dest)
+                    src, dest = src.lower().capitalize(), dest.lower().capitalize()
+
+                    list_lang = list(self.__language_dict.keys())
+                    if src not in list_lang and dest not in list_lang:
+                        error_message_box("Source and destination languages are wrong or not followed!")
+                        return
+                    elif src not in list_lang:
+                        error_message_box("Source language is wrong or not followed!")
+                        return
+                    elif dest not in list_lang:
+                        error_message_box("Destination language is wrong or not followed!")
+                        return
+
+                    src_ind, dest_ind = list_lang.index(src), list_lang.index(dest)
                     self.languages_in.setCurrentIndex(src_ind)
                     self.languages_out.setCurrentIndex(dest_ind)
                     self.text_in.setText(content[1].strip())
-                    self.action_translate()
-
+                    self.action_translate(update_trie=False)
                     info_message_box("Text has been loaded!")
         else:
             error_message_box("Action canceled!")
 
     def action_autocomplete(self):
+        if self.text_in.toPlainText() == "":
+            return
         tmp = self.text_in.toPlainText().split()[-1]
-        print(tmp)
-        sugg = trie.keys_with_prefix(self.trie, tmp)
-        if len(tmp) >= 2 and not self.text_in.toPlainText().endswith(" "):
-            self.sugg_message = max(sugg, key=lambda k: sugg[k])
+        # replace punctuation marks and convert to lower letters
+        tmp = re.sub('[?.!]', "", tmp).lower()
+        suggs = trie.keys_with_prefix(self.node, tmp)
+
+        # when no action is taken: tmp length less than 2, space at the end of the word or no suggestion to prefix word
+        if len(tmp) >= 2 and not self.text_in.toPlainText().endswith(" ") and suggs:
+            self.sugg_message = max(suggs, key=lambda k: suggs[k])
             self.suggestion = self.sugg_message.replace(tmp, "")
-            self.autocomplete.setText(f"To fill press Tab key: " + self.sugg_message)
+            self.autocomplete.setText(f"Press Tab to complete: " + self.sugg_message)
+        else:
+            self.autocomplete.setText(f"Press Tab to complete:")
 
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.KeyPress and obj is self.text_in:
@@ -166,11 +189,16 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
                 cursor = self.text_in.textCursor()
                 cursor.movePosition(QtGui.QTextCursor.End)
                 self.text_in.setTextCursor(cursor)
-                self.autocomplete.setText("To fill press Tab key:")
+                self.autocomplete.setText("Press Tab to complete:")
                 return True
 
         elif event.type() == QtCore.QEvent.KeyRelease and obj is self.text_in:
             if event.key() != QtCore.Qt.Key_Tab:
                 self.action_autocomplete()
+
+        if self.text_in.toPlainText() != "":
+            self.clear_button.setVisible(True)
+        else:
+            self.clear_button.setVisible(False)
 
         return super(MainWindow, self).eventFilter(obj, event)

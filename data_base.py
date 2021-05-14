@@ -4,7 +4,7 @@ from sqlalchemy_utils import database_exists
 
 
 class DataBase:
-    __engine = db.create_engine(r'sqlite:///C:\Users\mateu\PycharmProjects\Translator\languages.db')
+    __engine = db.create_engine(r'sqlite:///.\languages.db')
     __connection = __engine.connect()
     __metadata = db.MetaData()
     __languages = db.Table('languages', __metadata,

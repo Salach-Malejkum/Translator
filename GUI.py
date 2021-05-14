@@ -5,6 +5,7 @@ class Translator(object):
 
     def setup_ui(self, main_window):
         main_window.setObjectName("MainWindow")
+        main_window.setWindowIcon(QtGui.QIcon('icons/trans.png'))
         main_window.resize(871, 444)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         size_policy.setHorizontalStretch(0)
@@ -30,6 +31,7 @@ class Translator(object):
                                             "    font-size:11px;\n"
                                             "    text-decoration:none;\n"
                                             "    text-shadow:0px 1px 0px #2f6627;\n"
+                                            "    font-weight: bold;\n"
                                             "}\n"
                                             "QPushButton::hover{\n"
                                             "    background-color: #00b12d;\n"
@@ -52,6 +54,7 @@ class Translator(object):
                                         "    font-size:11px;\n"
                                         "    text-decoration:none;\n"
                                         "    text-shadow:0px 1px 0px #2f6627;\n"
+                                        "    font-weight: bold;\n"
                                         "}\n"
                                         "\n"
                                         "QComboBox::drop-down {\n"
@@ -106,6 +109,7 @@ class Translator(object):
                                          "    font-size:11px;\n"
                                          "    text-decoration:none;\n"
                                          "    text-shadow:0px 1px 0px #2f6627;\n"
+                                         "    font-weight: bold;\n"
                                          "}\n"
                                          "\n"
                                          "QComboBox::drop-down {\n"
@@ -158,9 +162,9 @@ class Translator(object):
                                    "    font-size:11px;\n"
                                    "    text-decoration:none;\n"
                                    "    text-shadow:0px 1px 0px #2f6627;\n"
+                                   "    font-weight: bold;\n"
                                    "background-color: rgb(165, 165, 165);")
         self.text_in.setObjectName("text_in")
-        # self.text_in.act
 
         self.text_out = QtWidgets.QTextEdit(self.centralwidget)
         self.text_out.setEnabled(False)
@@ -174,6 +178,7 @@ class Translator(object):
                                     "    font-size:11px;\n"
                                     "    text-decoration:none;\n"
                                     "    text-shadow:0px 1px 0px #2f6627;\n"
+                                    "    font-weight: bold;\n"
                                     "background-color: rgb(145, 145, 145);")
         self.text_out.setObjectName("text_out")
 
@@ -187,6 +192,7 @@ class Translator(object):
                                         "    color:#ffffff;\n"
                                         "    font-family:Arial;\n"
                                         "    font-size:11px;\n"
+                                        "    font-weight: bold;\n"
                                         "    text-decoration:none;\n"
                                         "    text-shadow:0px 1px 0px #2f6627;")
         self.autocomplete.setObjectName("label")
@@ -204,6 +210,7 @@ class Translator(object):
                                        "    font-size:11px;\n"
                                        "    text-decoration:none;\n"
                                        "    text-shadow:0px 1px 0px #2f6627;\n"
+                                       "    font-weight: bold;\n"
                                        "}\n"
                                        "QPushButton::hover{\n"
                                        "    background-color: #00b12d;\n"
@@ -226,6 +233,7 @@ class Translator(object):
                                        "    font-size:11px;\n"
                                        "    text-decoration:none;\n"
                                        "    text-shadow:0px 1px 0px #2f6627;\n"
+                                       "    font-weight: bold;\n"
                                        "}\n"
                                        "QPushButton::hover{\n"
                                        "    background-color: #00b12d;\n"
@@ -275,6 +283,7 @@ class Translator(object):
                                         "}")
         self.clear_button.setText("")
         self.clear_button.setObjectName("clear_button")
+        self.clear_button.setVisible(False)
 
         main_window.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(main_window)
@@ -286,8 +295,8 @@ class Translator(object):
 
     def retranslate_ui(self, main_window):
         _translate = QtCore.QCoreApplication.translate
-        main_window.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        main_window.setWindowTitle(_translate("MainWindow", "Translator"))
         self.translate_button.setText(_translate("MainWindow", "Translate"))
-        self.autocomplete.setText(_translate("MainWindow", "To fill press Tab key:"))
+        self.autocomplete.setText(_translate("MainWindow", "Press Tab to complete:"))
         self.save_button.setText(_translate("MainWindow", "Save"))
         self.load_button.setText(_translate("MainWindow", "Load"))
