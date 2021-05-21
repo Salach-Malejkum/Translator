@@ -1,12 +1,13 @@
+import os
+import dill
+import re
+import regex
 from PyQt5 import QtCore, QtGui, QtWidgets
+from google.auth.exceptions import TransportError
+import data_base
 import trie
 from GUI import Translator
 from translate import translate_google_cloud_api
-from google.auth.exceptions import TransportError
-import data_base
-import dill
-import re
-import os
 
 
 def error_message_box(message):
@@ -43,6 +44,7 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
     def __init__(self, *args, **kwargs):
         QtWidgets.QMainWindow.__init__(self, *args, **kwargs)
         self.setup_ui(self)
+        self.setWindowIcon(QtGui.QIcon("./icons/trans.png"))
         self.translate_button.clicked.connect(lambda: self.action_translate())
         self.save_button.clicked.connect(lambda: self.action_save())
         self.load_button.clicked.connect(lambda: self.action_load())
@@ -54,6 +56,7 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
         self.languages_in.currentTextChanged.connect(lambda: self.autocomplete_load_node())
         self.actual_lang = self.languages_in.currentText().lower()
         self.node = dill.load(open(f"autocomplete/{self.actual_lang}.pickle", "rb"))
+        self.suggestion = ""
 
     def autocomplete_load_node(self):
         tmp = self.languages_in.currentText().lower()
@@ -67,7 +70,8 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
             self.node = node
 
     def translate_update_trie(self):
-        words_save = re.sub("[^a-z ]", "", self.text_in.toPlainText().lower()).split()
+        # this regex ignores special language characters
+        words_save = regex.sub('[^\p{L} ]+', "", regex.sub('[\s]+', " ", self.text_in.toPlainText().lower())).split()
         for word in words_save:
             trie.insert(self.node, word)
         file_name = self.languages_in.currentText().lower()
@@ -190,6 +194,7 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
                 cursor.movePosition(QtGui.QTextCursor.End)
                 self.text_in.setTextCursor(cursor)
                 self.autocomplete.setText("Press Tab to complete:")
+                self.suggestion = ""
                 return True
 
         elif event.type() == QtCore.QEvent.KeyRelease and obj is self.text_in:
