@@ -59,6 +59,7 @@ class TranslatorTest(unittest.TestCase):
 
     def test_swap(self):
         self.form.languages_in.setCurrentIndex(21)
+        self.form.text_in.setText("where")
         QTest.mouseClick(self.form.translate_button, Qt.LeftButton)
         actual_text = self.form.text_out.toPlainText()
         QTest.mouseClick(self.form.swap_button, Qt.LeftButton)
@@ -74,9 +75,6 @@ class TranslatorTest(unittest.TestCase):
         self.form.text_in.setText("where")
         QTest.mouseClick(self.form.translate_button, Qt.LeftButton)
         self.assertNotEqual(self.form.text_out.toPlainText(), "")
-
-    def test_save_empty_translation(self):
-        QTest.mouseClick(self.form.save_button, Qt.LeftButton)
 
 
 if __name__ == '__main__':
