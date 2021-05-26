@@ -117,6 +117,9 @@ class MainWindow(QtWidgets.QMainWindow, Translator):
     def action_clear(self):
         self.text_in.setText("")
         self.text_out.setText("")
+        self.suggestion = ""
+        self.sugg_message = ""
+        self.autocomplete.setText(f"Press Tab to complete:")
 
     def action_save(self):
         filename, filter_ = QtWidgets.QFileDialog.getSaveFileName(caption='Select output file', directory='/Users',
